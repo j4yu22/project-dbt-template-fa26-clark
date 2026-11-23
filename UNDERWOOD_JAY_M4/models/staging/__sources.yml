@@ -18,8 +18,7 @@ sources:
         description: Append-only Finnhub load history, with one article per source file and load; article IDs can repeat between files or loads.
         data_tests:
           - unique:
-              arguments:
-                column_name: "TO_CHAR(SOURCE_DATE, 'YYYY-MM-DD') || '|' || SOURCE_FILE || '|' || ID::VARCHAR || '|' || TO_CHAR(LOADED_AT, 'YYYY-MM-DD HH24:MI:SS.FF9')"
+              column_name: "TO_CHAR(SOURCE_DATE, 'YYYY-MM-DD') || '|' || SOURCE_FILE || '|' || ID::VARCHAR || '|' || TO_CHAR(LOADED_AT, 'YYYY-MM-DD HH24:MI:SS.FF9')"
         columns:
           - name: ID
             description: Unique article identifier from Finnhub.

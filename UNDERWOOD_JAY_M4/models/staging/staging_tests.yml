@@ -26,8 +26,7 @@ models:
     description: Clean stock prices with one row per symbol and trading date.
     data_tests:
       - unique:
-          arguments:
-            column_name: "SYMBOL || '|' || TRADE_DATE"
+          column_name: "SYMBOL || '|' || TRADE_DATE"
     columns:
       - name: SYMBOL
         description: Trimmed, uppercase stock ticker.
@@ -42,8 +41,7 @@ models:
     description: Clean daily weather with one row per city and observation date; temperatures remain Fahrenheit.
     data_tests:
       - unique:
-          arguments:
-            column_name: "CITY || '|' || DATE"
+          column_name: "CITY || '|' || DATE"
     columns:
       - name: CITY
         description: Trimmed, uppercase city name.
