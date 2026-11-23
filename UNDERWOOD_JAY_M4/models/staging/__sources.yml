@@ -1,0 +1,134 @@
+version: 2
+
+sources:
+  - name: snowbearair
+    database: PROJECT_DB
+    schema: RAW
+    description: >
+      Raw tables loaded by Airflow DAGs into Snowflake.
+      Jay Underwood's weather, news, and stock tables from Milestones 1–3.
+
+    tables:
+
+      # ----------------------------------------------------------------
+      # NEWS — loaded by: news_to_sftp_dag → sftp_to_snowflake_dagv2
+      # Source: Finnhub API (financial news by stock symbol)
+      # ----------------------------------------------------------------
+      - name: UNDERWOOD_JAY_M2
+        description: Append-only Finnhub load history, with one article per source file and load; article IDs can repeat between files or loads.
+        data_tests:
+          - unique:
+              arguments:
+                column_name: "TO_CHAR(SOURCE_DATE, 'YYYY-MM-DD') || '|' || SOURCE_FILE || '|' || ID::VARCHAR || '|' || TO_CHAR(LOADED_AT, 'YYYY-MM-DD HH24:MI:SS.FF9')"
+        columns:
+          - name: ID
+            description: Unique article identifier from Finnhub.
+            tests:
+              - not_null
+          - name: HEADLINE
+            description: News article headline.
+            tests:
+              - not_null
+          - name: DATETIME
+            description: Article publication time in Unix epoch seconds.
+            tests:
+              - not_null
+          - name: CATEGORY
+            description: News category (e.g., company, top news).
+          - name: SOURCE
+            description: Publisher/news outlet name.
+          - name: RELATED
+            description: Stock ticker symbol this article is related to (e.g., AAPL, TSLA).
+            tests:
+              - not_null
+          - name: SUMMARY
+            description: Short article summary text.
+          - name: URL
+            description: Link to the full article.
+          - name: IMAGE
+            description: URL of the article thumbnail image.
+          - name: PUBLISHED_AT
+            description: Article publication timestamp in UTC, converted by the Airflow loader.
+          - name: SOURCE_FILE
+            description: Original SFTP file name.
+            tests:
+              - not_null
+          - name: SOURCE_DATE
+            description: Date assigned to the source file.
+            tests:
+              - not_null
+          - name: LOADED_AT
+            description: Load timestamp used to keep the latest version of each article.
+            tests:
+              - not_null
+
+      # ----------------------------------------------------------------
+      # STOCKS — loaded by: stocks_to_mongo_dagv3 → mongo_to_snowflake_dag
+      # Source: Yahoo Finance (yfinance) via MongoDB staging
+      # ----------------------------------------------------------------
+      - name: UNDERWOOD_JAY_M3
+        description: Daily OHLCV stock data for S&P 500 symbols, one row per symbol per trading day.
+        columns:
+          - name: SYMBOL
+            description: Stock ticker symbol (e.g., AAPL, MSFT).
+            tests:
+              - not_null
+          - name: DATETIME
+            description: Trading timestamp; staging casts it to TRADE_DATE.
+            tests:
+              - not_null
+          - name: OPEN
+            description: Opening price for the trading day (USD).
+            tests:
+              - not_null
+              - is_positive_amount
+          - name: HIGH
+            description: Intraday high price (USD).
+            tests:
+              - not_null
+              - is_positive_amount
+          - name: LOW
+            description: Intraday low price (USD).
+            tests:
+              - not_null
+              - is_positive_amount
+          - name: CLOSE
+            description: Closing price for the trading day (USD).
+            tests:
+              - not_null
+              - is_positive_amount
+          - name: VOLUME
+            description: Total shares traded during the session.
+            tests:
+              - not_null
+              - is_nonnegative_amount
+
+      # ----------------------------------------------------------------
+      # WEATHER — loaded by: weather_to_snowflake_dag_v2
+      # Source: Open-Meteo Historical API (financial hub cities)
+      # ----------------------------------------------------------------
+      - name: UNDERWOOD_J_M1
+        description: Daily weather observations for financial hub cities, one row per city per day.
+        columns:
+          - name: DATE
+            description: The observation date.
+            tests:
+              - not_null
+          - name: CITY
+            description: Financial hub city name (e.g., New York, London, Tokyo).
+            tests:
+              - not_null
+          - name: MAX_TEMP
+            description: Maximum temperature for the day (degrees Fahrenheit).
+          - name: MIN_TEMP
+            description: Minimum temperature for the day (degrees Fahrenheit).
+          - name: PRECIP
+            description: Total precipitation for the day (mm).
+          - name: MAX_WIND
+            description: Maximum wind speed for the day (km/h).
+          - name: MAX_WIND_MPH
+            description: Maximum wind speed converted to miles per hour.
+          - name: PRECIP_INCHES
+            description: Precipitation converted to inches.
+          - name: TEMP_MIDPOINT_F
+            description: Midpoint of the daily high and low temperatures in Fahrenheit, not a measured daily mean.

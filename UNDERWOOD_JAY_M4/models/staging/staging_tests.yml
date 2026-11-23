@@ -1,0 +1,63 @@
+version: 2
+
+models:
+  - name: raw_news
+    description: Clean financial news with one row per article ID, keeping the latest load.
+    columns:
+      - name: ID
+        description: Article identifier, stored as text.
+        data_tests:
+          - not_null
+          - unique
+      - name: DATETIME
+        description: Publication timestamp in UTC.
+        data_tests:
+          - not_null
+      - name: HEADLINE
+        description: Trimmed article headline.
+        data_tests:
+          - not_null
+      - name: RELATED
+        description: Uppercase stock ticker supplied by Finnhub.
+        data_tests:
+          - not_null
+
+  - name: raw_stocks
+    description: Clean stock prices with one row per symbol and trading date.
+    data_tests:
+      - unique:
+          arguments:
+            column_name: "SYMBOL || '|' || TRADE_DATE"
+    columns:
+      - name: SYMBOL
+        description: Trimmed, uppercase stock ticker.
+        data_tests:
+          - not_null
+      - name: TRADE_DATE
+        description: Trading date derived from the source timestamp.
+        data_tests:
+          - not_null
+
+  - name: raw_weather
+    description: Clean daily weather with one row per city and observation date; temperatures remain Fahrenheit.
+    data_tests:
+      - unique:
+          arguments:
+            column_name: "CITY || '|' || DATE"
+    columns:
+      - name: CITY
+        description: Trimmed, uppercase city name.
+        data_tests:
+          - not_null
+      - name: DATE
+        description: Observation date.
+        data_tests:
+          - not_null
+      - name: MAX_TEMP
+        description: Daily maximum temperature in Fahrenheit; unknown values remain null.
+      - name: MIN_TEMP
+        description: Daily minimum temperature in Fahrenheit; unknown values remain null.
+      - name: PRECIP
+        description: Daily precipitation in mm, using zero for missing readings per the assignment convention.
+      - name: MAX_WIND
+        description: Daily maximum wind speed in km/h, using zero for missing readings per the assignment convention.
